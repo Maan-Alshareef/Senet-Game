@@ -1,0 +1,27 @@
+private static double solve(Board board, PlayerColor current, PlayerColor maxPlayer, int depth) {
+    if (depth == 0 || board.isFinished(maxPlayer) || board.isFinished(maxPlayer.opposite())) {
+        return evaluate(board, maxPlayer);
+    }
+
+    double expected = 0.0;
+    for (var entry : StickThrow.getProbabilities().entrySet()) {
+        int roll = entry.getKey();
+        double prob = entry.getValue();
+
+        List<Move> moves = board.getLegalMoves(current, roll);
+        double best = current == maxPlayer ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
+
+        if (moves.isEmpty()) {
+            expected += prob * solve(board, current.opposite(), maxPlayer, depth - 1);
+            continue;
+        }
+
+        for (Move m : moves) {
+            Board next = board.applyMove(m);
+            double val = solve(next, current.opposite(), maxPlayer, depth - 1);
+            best = current == maxPlayer ? Math.max(best, val) : Math.min(best, val);
+        }
+        expected += prob * best;
+    }
+    return expected;
+}
